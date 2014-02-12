@@ -353,6 +353,12 @@ void Log::updateCachedPreference(const char *name)
 
 void Log::write(Type type, Level level, const char *text, bool buffer)
 {
+  time_t now = time(0);
+  struct tm tstruct;
+  tstruct = *localtime(&now);
+  char *t1 = g_strdup(purple_utf8_strftime(_("%d %b %Y %H:%M:%S"), &tstruct));
+  text = g_strdup_printf("%s: %s", t1, text);
+
   if (buffer)
     bufferMessage(type, level, text);
 
