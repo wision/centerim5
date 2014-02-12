@@ -147,7 +147,7 @@ void Conversation::onScreenResized()
   moveResizeRect(r);
 }
 
-void Conversation::write(const char *name, const char * /*alias*/,
+void Conversation::write(const char *name, const char * alias,
     const char *message, PurpleMessageFlags flags, time_t mtime)
 {
   // beep on message
@@ -195,12 +195,8 @@ void Conversation::write(const char *name, const char * /*alias*/,
   // write text into logfile
   if (!(flags & PURPLE_MESSAGE_NO_LOG)) {
     char *log_msg;
-    if (type == PURPLE_CONV_TYPE_CHAT)
-      log_msg = g_strdup_printf("\f\n%s\n%s\n%lu\n%lu\n%s: %s\n", dir, mtype,
-          mtime, cur_time, name, message);
-    else
-      log_msg = g_strdup_printf("\f\n%s\n%s\n%lu\n%lu\n%s\n", dir, mtype,
-          mtime, cur_time, message);
+    log_msg = g_strdup_printf("\f\n%s\n%s\n%lu\n%lu\n%s: %s\n", dir, mtype,
+        mtime, cur_time, alias, message);
     if (logfile) {
       GError *err = NULL;
       if (g_io_channel_write_chars(logfile, log_msg, -1, NULL, &err)
@@ -218,17 +214,13 @@ void Conversation::write(const char *name, const char * /*alias*/,
     g_free(log_msg);
   }
 
-  // we currently don't support displaying HTML in any way
-  char *nohtml = stripHTML(message);
-
   // write text to the window
+  char *newline = purple_strdup_withhtml(message);
+  char *nohtml = purple_markup_strip_html(newline);
   char *time = extractTime(mtime, cur_time);
-  char *msg;
-  if (type == PURPLE_CONV_TYPE_CHAT)
-    msg = g_strdup_printf("%s %s: %s", time, name, nohtml);
-  else
-    msg = g_strdup_printf("%s %s", time, nohtml);
+  char *msg = g_strdup_printf("(%s) %s: %s", time, alias, nohtml);
   view->append(msg, color);
+  g_free(newline);
   g_free(nohtml);
   g_free(time);
   g_free(msg);
@@ -483,8 +475,8 @@ char *Conversation::extractTime(time_t sent_time, time_t show_time) const
     memset(&sent_time_local, 0, sizeof(sent_time_local));
 
   // format the times
-  char *t1 = g_strdup(purple_date_format_long(&show_time_local));
-  char *t2 = g_strdup(purple_date_format_long(&sent_time_local));
+  char *t1 = g_strdup(purple_utf8_strftime(_("%d %b %Y %H:%M"), &show_time_local));
+  char *t2 = g_strdup(purple_utf8_strftime(_("%d %b %Y %H:%M"), &sent_time_local));
 
   int tdiff = abs(sent_time - show_time);
 
@@ -533,7 +525,7 @@ void Conversation::loadHistory()
     if ((st = g_io_channel_read_line(chan, &line, NULL, NULL, &err))
         != G_IO_STATUS_NORMAL)
       break;
-    int color = 0;
+    int color = 3;
     if (!strcmp(line, "OUT\n"))
       color = 1;
     else if (!strcmp(line, "IN\n"))
@@ -545,12 +537,12 @@ void Conversation::loadHistory()
         != G_IO_STATUS_NORMAL)
       break;
     bool cim4 = true;
-    if (!strcmp(line, "MSG2\n"))
-      cim4 = false;
-    else if (!strcmp(line, "OTHER\n")) {
-      cim4 = false;
-      color = 0;
-    }
+    // if (!strcmp(line, "MSG2\n"))
+    //   cim4 = false;
+    // else if (!strcmp(line, "OTHER\n")) {
+    //   cim4 = false;
+    //   color = 0;
+    // }
     g_free(line);
 
     // sent time
@@ -584,7 +576,7 @@ void Conversation::loadHistory()
       // write text to the window
       char *nohtml = stripHTML(line);
       char *time = extractTime(sent_time, show_time);
-      char *msg = g_strdup_printf("%s %s", time, nohtml);
+      char *msg = g_strdup_printf("(%s) %s", time, nohtml);
       view->append(msg, color);
       g_free(nohtml);
       g_free(time);
@@ -611,10 +603,10 @@ void Conversation::loadHistory()
         g_free(line);
       }
 
-      if (!new_msg) {
-        // EOL or I/O error
-        break;
-      }
+      // if (!new_msg) {
+      //   // EOL or I/O error
+      //   break;
+      // }
 
       // validate UTF-8
       if (!g_utf8_validate(msg.c_str(), -1, NULL)) {
@@ -624,9 +616,13 @@ void Conversation::loadHistory()
       }
 
       // add the message to the window
+      char *newline = purple_strdup_withhtml(msg.c_str());
+      char *nohtml = purple_markup_strip_html(newline);
       char *time = extractTime(sent_time, show_time);
-      char *final_msg = g_strdup_printf("%s %s", time, msg.c_str());
+      char *final_msg = g_strdup_printf("(%s) %s", time, nohtml);
       view->append(final_msg, color);
+      g_free(newline);
+      g_free(nohtml);
       g_free(time);
       g_free(final_msg);
     }
