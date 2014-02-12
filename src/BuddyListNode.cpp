@@ -399,13 +399,13 @@ void BuddyListBuddy::update()
 
   const char *status = getBuddyStatus(buddy);
   const char *alias = purple_buddy_get_alias(buddy);
-  if (status[0]) {
-    char *text = g_strdup_printf("%s %s", status, alias);
-    setText(text);
-    g_free(text);
-  }
-  else
-    setText(alias);
+  // if (status[0]) {
+  //   char *text = g_strdup_printf("%s %s", status, alias);
+  //   setText(text);
+  //   g_free(text);
+  // }
+  // else
+  setText(alias);
 
   sortIn();
 
@@ -743,14 +743,14 @@ void BuddyListContact::update()
   // format contact label
   const char *alias = purple_contact_get_alias(contact);
   const char *status = getBuddyStatus(buddy);
-  char *text;
-  if (status[0])
-    text = g_strdup_printf("%s %s%s", status, alias, size ? size : "");
-  else
-    text = g_strdup_printf("%s%s", alias, size ? size : "");
-  setText(text);
+  // char *text;
+  // if (status[0])
+  //   text = g_strdup_printf("%s %s%s", status, alias, size ? size : "");
+  // else
+  //   text = g_strdup_printf("%s%s", alias, size ? size : "");
+  setText(g_strdup_printf("%s%s", alias, size ? size : ""));
   g_free(size);
-  g_free(text);
+  // g_free(text);
 
   sortIn();
 
