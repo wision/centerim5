@@ -218,7 +218,7 @@ void Conversation::write(const char *name, const char * alias,
   char *newline = purple_strdup_withhtml(message);
   char *nohtml = purple_markup_strip_html(newline);
   char *time = extractTime(mtime, cur_time);
-  char *msg = g_strdup_printf("(%s) %s: %s", time, alias, nohtml);
+  char *msg = g_strdup_printf("%s %s: %s", time, alias, nohtml);
   view->append(msg, color);
   g_free(newline);
   g_free(nohtml);
@@ -475,8 +475,8 @@ char *Conversation::extractTime(time_t sent_time, time_t show_time) const
     memset(&sent_time_local, 0, sizeof(sent_time_local));
 
   // format the times
-  char *t1 = g_strdup(purple_utf8_strftime(_("%d %b %Y %H:%M"), &show_time_local));
-  char *t2 = g_strdup(purple_utf8_strftime(_("%d %b %Y %H:%M"), &sent_time_local));
+  char *t1 = g_strdup(purple_utf8_strftime(_("%d %b %Y %H:%M:%S"), &show_time_local));
+  char *t2 = g_strdup(purple_utf8_strftime(_("%d %b %Y %H:%M:%S"), &sent_time_local));
 
   int tdiff = abs(sent_time - show_time);
 
@@ -576,7 +576,7 @@ void Conversation::loadHistory()
       // write text to the window
       char *nohtml = stripHTML(line);
       char *time = extractTime(sent_time, show_time);
-      char *msg = g_strdup_printf("(%s) %s", time, nohtml);
+      char *msg = g_strdup_printf("%s %s", time, nohtml);
       view->append(msg, color);
       g_free(nohtml);
       g_free(time);
@@ -619,7 +619,7 @@ void Conversation::loadHistory()
       char *newline = purple_strdup_withhtml(msg.c_str());
       char *nohtml = purple_markup_strip_html(newline);
       char *time = extractTime(sent_time, show_time);
-      char *final_msg = g_strdup_printf("(%s) %s", time, nohtml);
+      char *final_msg = g_strdup_printf("%s %s", time, nohtml);
       view->append(final_msg, color);
       g_free(newline);
       g_free(nohtml);

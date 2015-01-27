@@ -239,6 +239,12 @@ void Log::shortenWindowText()
 
 void Log::write(const char *text)
 {
+  time_t now = time(0);
+  struct tm tstruct;
+  tstruct = *localtime(&now);
+  char *t1 = g_strdup(purple_utf8_strftime(_("%d %b %Y %H:%M:%S"), &tstruct));
+  text = g_strdup_printf("%s: %s", t1, text);
+
   writeToFile(text);
   textview->append(text);
   shortenWindowText();
